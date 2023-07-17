@@ -55,11 +55,11 @@ rm(temp)
 rm(tbl)
 rm(list_path)
 # calculating net consumption and error matrix from combined data ---------
-
 temp_data <- read_excel("C:/Users/User/Desktop/IITK internship/OG data/temp_data.xlsx")    # reads the temperature data in the form of an excel sheet having temperatures for each day
 net_consump_list = list()
 errormat_list = list()
 data_new_list = list()
+colnames_list <- list(c('Dec 16', 'Jan 17', 'Feb 17', 'Mar 17', 'Apr 17', 'May 17', 'Jun 17', 'Jul 17', 'Aug 17', 'Sep 17', 'Oct 17', 'Nov 17'), c('Dec 17', 'Jan 18', 'Feb 18', 'Mar 18', 'Apr 18', 'May 18', 'Jun 18', 'Jul 18', 'Aug 18', 'Sep 18', 'Oct 18', 'Nov 18'), c('Dec 18', 'Jan 19', 'Feb 19', 'Mar 19', 'Apr 19', 'May 19', 'Jun 19', 'Jul 19', 'Aug 19', 'Sep 19', 'Oct 19', 'Nov 19'), c('Dec 20', 'Jan 21', 'Feb 21', 'Mar 21', 'Apr 21', 'May 21', 'Jun 21', 'Jul 21', 'Aug 21', 'Sep 21', 'Oct 21', 'Nov 21'))
 for(x in 1:4)                                                                   # a loop is run to assign values of combined_data according to the years.
 {
   combined_data = combined_list[[x]]
@@ -92,7 +92,7 @@ for(x in 1:4)                                                                   
     for(j in 1:22)
     {
       if(is.na(errormat[i,j]))                                                  
-        data_new[i,j] = NA                                                       # NA is assigned to element of updated matrix if element of error matrix has NA.
+        data_new[i,j] = NA                                                      # NA is assigned to element of updated matrix if element of error matrix has NA.
       
       else if(errormat[i,j] > 10)                                               # NA is assigned to element of updated matrix if element of error matrix has error greater than 10.
       {
@@ -133,23 +133,9 @@ for(x in 1:4)                                                                   
   net_consump_list[[x]] = net_consump
   data_new_list[[x]] = combined_data_1
   errormat_list[[x]] = errormat
-  if(x == 1)                                                                    #obtained values of (net consumption,combined_data,error matrix) are further assigned to respective years using if else statements.
-  {
-    colnames(net_consump_list[[x]]) = c('Dec 16', 'Jan 17', 'Feb 17', 'Mar 17', 'Apr 17', 'May 17', 'Jun 17', 'Jul 17', 'Aug 17', 'Sep 17', 'Oct 17', 'Nov 17')
-  }
-  else if(x == 2)
-  {
-    colnames(net_consump_list[[x]]) = c('Dec 17', 'Jan 18', 'Feb 18', 'Mar 18', 'Apr 18', 'May 18', 'Jun 18', 'Jul 18', 'Aug 18', 'Sep 18', 'Oct 18', 'Nov 18')
-  }
-  else if(x == 3)
-  {
-    colnames(net_consump_list[[x]]) = c('Dec 18', 'Jan 19', 'Feb 19', 'Mar 19', 'Apr 19', 'May 19', 'Jun 19', 'Jul 19', 'Aug 19', 'Sep 19', 'Oct 19', 'Nov 19')
-  }
-  else if(x == 4)
-  {
-    colnames(net_consump_list[[x]]) = c('Dec 20', 'Jan 21', 'Feb 21', 'Mar 21', 'Apr 21', 'May 21', 'Jun 21', 'Jul 21', 'Aug 21', 'Sep 21', 'Oct 21', 'Nov 21')
-  }
+  colnames(net_consump_list[[x]]) = colnames_list[[x]]
 }
+rm(colnames_list)
 rm(combined_data_1)
 rm(data_new)
 rm(combined_data)
@@ -160,34 +146,19 @@ rm(temp_2)
 median_list = list()
 for(x in 1:4)
 {
-  median_list[[x]] = apply(net_consump_list[[x]], 2, median, na.rm = TRUE)
+  median_list[[x]] = apply(net_consump_list[[x]], 2, median, na.rm = TRUE)      # used to calculate med EC for each month by excluding the 'NA' Values
 }
 # calculating degree days with base temp as 18 ----------------------------
 DDandEC_list = list()
 degreedays_2_list = list()
+years = c(2017, 2018, 2019, 2021)
 bt = 18                                                                         # value of base temperature 18 is assigned to bt
 for(x in 1:4)                                                                   # a loop is run to calculate the degree days.
 {
   net_consump = net_consump_list[[x]]
   med = median_list[[x]]
-  if(x == 1)
-  {
-    year = 2017
-  }
-  if(x == 2)
-  {
-    year = 2018
-  }
-  if(x == 3)
-  {
-    year = 2019
-  }
-  if(x == 4)
-  {
-    year = 2021
-  }
-  degreedays_1 = temp_data[temp_data$year == year, ]                            # degreedays_1 is created so as to seperate out temp data to different years
-  degreedays_1 = rbind(temp_data[temp_data$year == year - 1 & temp_data$month == 12, ], degreedays_1)     # as we want the data from the span of December of previous year to November of given year, hence December of previous year is added and December of given year is removed.
+  degreedays_1 = temp_data[temp_data$year == years[x], ]                            # degreedays_1 is created so as to seperate out temp data to different years
+  degreedays_1 = rbind(temp_data[temp_data$year == years[x] - 1 & temp_data$month == 12, ], degreedays_1)     # as we want the data from the span of December of previous year to November of given year, hence December of previous year is added and December of given year is removed.
   degreedays_1 = degreedays_1[1:365, ]
   degreedays_1 = cbind(degreedays_1, matrix((1:730), nrow = 365, ncol = 2, byrow = FALSE))
   colnames(degreedays_1)[5] = 'HDD'
@@ -216,11 +187,11 @@ for(x in 1:4)                                                                   
   degreedays_2 = t(net_consump[c(1,2), ])
   for(i in 1:11)                                                                # a loop is run to sum the values of degree days from Jan to Nov of current year 
   {
-    temp_3 = degreedays_1[degreedays_1$year == year & degreedays_1$month == i, ]
+    temp_3 = degreedays_1[degreedays_1$year == years[x] & degreedays_1$month == i, ]
     degreedays_2[i, ] = apply(temp_3[, c(5,6)], 2, sum)
   }
   
-  temp_4 = degreedays_1[degreedays_1$year == year - 1 & degreedays_1$month == 12, ]    # as we also want degree days of Dec of prev year hence its further added and the extra row present is removed.
+  temp_4 = degreedays_1[degreedays_1$year == years[x] - 1 & degreedays_1$month == 12, ]    # as we also want degree days of Dec of prev year hence its further added and the extra row present is removed.
   temp_5 = apply(temp_4[, c(5,6)], 2, sum)
   degreedays_2 = rbind(temp_5, degreedays_2)
   degreedays_2 = degreedays_2[-13, ]
@@ -232,6 +203,7 @@ for(x in 1:4)                                                                   
   colnames(DDandEC)[3] = 'med EC'
   DDandEC_list[[x]] = DDandEC
 }
+rm(years)
 rm(DDandEC)
 rm(degreedays_1)
 rm(degreedays_2)
@@ -290,5 +262,6 @@ names(median_list) = c('median_2017', 'median_2018', 'median_2019', 'median_2021
 # multiparameter regression -----------------------------------------------
 model <- lm(`med EC` ~ (HDD + CDD), data = DDandEC_combined)                    # model is formed having med EC as dependant variable and degree days as independant variables.                 
 print(summary(model))
-print(round(model$coefficients,1))
-print('Hence the equation is obtained as - med EC = (coeff of HDD)*HDD + (coeff of CDD)*CDD + intercept')
+parameters_list = list(round(as.numeric(model$coefficients[2]),2), round(as.numeric(model$coefficients[3]),2), round(as.numeric(model$coefficients[1],2)))
+names(parameters_list) = c('HDD', 'CDD', 'base line consump')
+sprintf('Hence the equation is obtained as - med EC = %f*HDD + %f*CDD + %f', parameters_list$HDD, parameters_list$CDD, parameters_list$`base line consump`)
